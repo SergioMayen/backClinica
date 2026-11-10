@@ -4,7 +4,7 @@ Aplicación Angular standalone para consumir los servicios Spring Boot del repos
 
 ## Inicio local
 
-1. Inicia MySQL, el servicio de autenticación en `8081` y la API clínica en `8080` de acuerdo con [AUTHENTICATION.md](../AUTHENTICATION.md).
+1. Inicia SQL Server, el servicio de autenticación en `8081` y la API clínica en `8080` de acuerdo con [AUTHENTICATION.md](../AUTHENTICATION.md).
 2. Desde `frontend/`, ejecuta `npm install` y `npm start`.
 3. Abre `http://localhost:4200` e inicia sesión con una cuenta registrada en el servicio auth.
 

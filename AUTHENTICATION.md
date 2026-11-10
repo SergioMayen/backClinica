@@ -9,7 +9,7 @@ El servicio de autenticación emite JWT `RS256`. La llave privada se queda en el
 
 ## Preparación
 
-Requisitos: Java 21, Maven (o wrapper del proyecto clínico), MySQL y OpenSSL. Crear ambas bases (`clinica` y `auth_db`) en el servidor MySQL. Desde `auth-service/` generar el par:
+Requisitos: Java 21, Maven (o wrapper del proyecto clínico), SQL Server o Azure SQL Database, y OpenSSL. Crear ambas bases (`clinica` y `auth_db`) en el servidor SQL. Desde `auth-service/` generar el par:
 
 ```sh
 ./scripts/generate-keys.sh
@@ -22,8 +22,8 @@ Usar el mismo par en el servicio auth y proveer `auth-service/keys/public.pem` a
 En una terminal desde `auth-service/`:
 
 ```sh
-AUTH_DB_URL='jdbc:mysql://localhost:3307/auth_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC' \
-AUTH_DB_USERNAME=root AUTH_DB_PASSWORD='tu-clave' \
+AUTH_DB_URL='jdbc:sqlserver://localhost:1433;databaseName=auth_db;encrypt=true;trustServerCertificate=true' \
+AUTH_DB_USERNAME='tu-usuario' AUTH_DB_PASSWORD='tu-clave' \
 JWT_PRIVATE_KEY=file:./keys/private.pem JWT_PUBLIC_KEY=file:./keys/public.pem \
 mvn spring-boot:run
 ```
@@ -31,13 +31,15 @@ mvn spring-boot:run
 En otra terminal, desde la raíz:
 
 ```sh
-DB_URL='jdbc:mysql://localhost:3307/clinica?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC' \
-DB_USERNAME=root DB_PASSWORD='tu-clave' \
+DB_URL='jdbc:sqlserver://localhost:1433;databaseName=clinica;encrypt=true;trustServerCertificate=true' \
+DB_USERNAME='tu-usuario' DB_PASSWORD='tu-clave' \
 JWT_PUBLIC_KEY_LOCATION=file:./auth-service/keys/public.pem \
 ./mvnw spring-boot:run
 ```
 
 `JWT_PUBLIC_KEY_LOCATION` debe apuntar a un archivo PEM `BEGIN PUBLIC KEY`. En Docker, montar las llaves como secretos de solo lectura y establecer la ubicación `file:/...` dentro del contenedor. No hay credenciales predeterminadas.
+
+El ejemplo local acepta un certificado autofirmado para desarrollo. En Azure usa `encrypt=true;trustServerCertificate=false` y el nombre DNS completo `*.database.windows.net` para validar el certificado TLS.
 
 ## Pruebas manuales
 

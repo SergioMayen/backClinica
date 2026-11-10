@@ -2,14 +2,26 @@
 
 La rama de despliegue se llama `despliegue-seguridad`. Render toma de ella los dos servicios Docker Java 21 y el Static Site Angular. La salida Angular es `frontend/dist/clinica/browser`; las rutas del navegador se reescriben a `index.html`.
 
-## Base MySQL
+## Azure SQL Database
 
-La aplicación usa MySQL en dos esquemas: `clinica` y `auth_db`. No hay un script que borre ni importe datos existentes; Hibernate `update` crea o añade las tablas y columnas necesarias. Configura dos bases y dos usuarios con permisos solo sobre su esquema. En producción configura las URLs JDBC con TLS, por ejemplo `jdbc:mysql://<servidor>:3306/clinica?sslMode=VERIFY_IDENTITY` y el esquema `auth_db` para autenticación. Añade las credenciales en los campos secretos de Render:
+El backend y el servicio de autenticación usan bases SQL Server separadas: `clinica` y `auth_db`. No se detectaron scripts de importación ni migraciones destructivas; Hibernate `update` conserva las tablas y filas existentes y crea o añade lo que falta. Para empezar de cero, crea dos bases de Azure SQL Database con la oferta gratuita aplicada y usa el comportamiento **auto-pause** al alcanzar el límite gratuito. La oferta publicada incluye 100 000 segundos vCore, 32 GB de datos y 32 GB de respaldo por base y mes; la base se pausa al agotar la cuota y no está disponible hasta el siguiente mes. Verifica que Azure muestre **Free offer applied** y costo estimado de USD 0 antes de crearla. La oferta gratuita no incluye SLA.
 
-- `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` para backclinica-api.
-- `AUTH_DB_URL`, `AUTH_DB_USERNAME`, `AUTH_DB_PASSWORD` para backclinica-auth.
+Al crear la base lógica y las dos bases de datos, asigna a cada servicio su propio usuario contenido, con permisos limitados a su base. El esquema se actualiza al iniciar la aplicación, así que esos usuarios deben poder crear y alterar tablas, además de leer y escribir los datos de su base. No uses datos reales de pacientes para la demostración.
 
-Si la cuenta Azure reúne los requisitos del nivel gratuito de Azure Database for MySQL Flexible Server, el límite vigente cubre hasta 750 horas y 32 GB durante 12 meses. El límite y la elegibilidad se deben confirmar en la suscripción antes de crear el recurso. Render PostgreSQL gratuito no sirve para esta aplicación y vence a los 30 días.
+Configura estas variables como secretos en Render:
+
+- `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` para `backclinica-api`.
+- `AUTH_DB_URL`, `AUTH_DB_USERNAME`, `AUTH_DB_PASSWORD` para `backclinica-auth`.
+
+Formato de URL cifrada para Azure SQL:
+
+```text
+jdbc:sqlserver://<servidor>.database.windows.net:1433;databaseName=clinica;encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net;loginTimeout=30
+```
+
+En `AUTH_DB_URL`, cambia `databaseName=clinica` por `databaseName=auth_db`. Usa el nombre DNS completo del servidor y TLS con validación de certificado.
+
+Azure SQL Database usa reglas de firewall IPv4. Mantén desactivada la opción para permitir todos los servicios de Azure y agrega solo los rangos de salida que Render muestre para `backclinica-api` y `backclinica-auth` en **Connect → Outbound**. Render comparte esos rangos por región; la lista exacta solo aparece después de crear los servicios. Mientras tanto, deja la lista de firewall vacía. No abras `0.0.0.0–255.255.255.255`.
 
 ## Claves RSA y configuración de Render
 
@@ -21,8 +33,6 @@ cd auth-service
 ```
 
 Carga `auth-service/keys/private.pem` y `auth-service/keys/public.pem` como archivos secretos del servicio backclinica-auth, en `/etc/secrets/private.pem` y `/etc/secrets/public.pem`. Carga únicamente `public.pem` en backclinica-api, en `/etc/secrets/public.pem`. Nunca agregues `keys/` o archivos PEM a Git. Render debe enlazar los tres servicios con la rama `despliegue-seguridad`. Si los subdominios previstos ya están ocupados, actualiza `API_URL`, `AUTH_URL` y `FRONTEND_ORIGIN` con los nombres que Render asigne.
-
-La base Azure debe aceptar conexiones cifradas desde los rangos de salida que Render muestra en **Connect → Outbound** para cada servicio en Oregon. Añade esos rangos específicos al firewall de MySQL, nunca la regla general para cualquier servicio Azure. Las redes de salida gratuitas de Render son compartidas con otros servicios de la región.
 
 ## Demo
 
