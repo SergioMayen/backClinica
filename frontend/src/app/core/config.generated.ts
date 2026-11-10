@@ -1,1 +1,1 @@
-export const runtimeConfig = {"apiUrl":"/api","authUrl":"/auth/api"} as const;
+export const runtimeConfig = {"apiUrl":"/api","authUrl":"/auth/api","turnstileSiteKey":""} as const;

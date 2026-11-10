@@ -33,3 +33,9 @@ Carga `auth-service/keys/private.pem` y `auth-service/keys/public.pem` como arch
 ## Demo
 
 Después de desplegar, usa `POST /api/auth/register` para crear un usuario ficticio. Usa el token devuelto para crear un registro ficticio de paciente en `POST /api/pacientes`. La API no contiene semillas automáticas; no se modifican filas que ya existan. El frontend carga las URLs de las APIs desde `API_URL` y `AUTH_URL` al compilar.
+
+### Cloudflare Turnstile para el login
+
+El login solo acepta solicitudes con un token de Turnstile válido. Crea un widget en Cloudflare Turnstile, configura el hostname `backclinica-web.onrender.com` y acción `login`. En Render, configura `TURNSTILE_SITE_KEY` como variable de entorno del Static Site `backclinica-web`, y `TURNSTILE_SECRET_KEY` como secreto del Web Service `backclinica-auth`. `TURNSTILE_EXPECTED_HOSTNAME` debe ser `backclinica-web.onrender.com`. La clave secreta nunca se coloca en el frontend ni en Git. Después de guardar, espera los dos despliegues; el frontend debe recompilarse para incorporar la site key. Sin ambos valores, el formulario se mantiene bloqueado y la API rechaza el login de forma cerrada.
+
+La API verifica el token con Cloudflare antes de consultar la cuenta o comprobar la contraseña. Rechaza tokens inválidos, expirados, con hostname distinto o acción distinta. Por eso un rechazo de Turnstile no suma un fallo de contraseña; la limitación de solicitudes se revisa por separado antes de validar Turnstile.

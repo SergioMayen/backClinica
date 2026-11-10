@@ -9,8 +9,8 @@ export interface Session { username: string; roles: string[]; }
 export class AuthService {
   readonly session = signal<Session | null>(this.readSession());
   constructor(private http: HttpClient, private router: Router) {}
-  login(username: string, password: string): Observable<LoginResponse> {
-    return this.http.post<LoginResponse>(`${authUrl}/auth/login`, { username, password }).pipe(tap(response => {
+  login(username: string, password: string, turnstileToken: string): Observable<LoginResponse> {
+    return this.http.post<LoginResponse>(`${authUrl}/auth/login`, { username, password, turnstileToken }).pipe(tap(response => {
       const roles = this.decodeRoles(response.accessToken);
       const session = { username, roles };
       localStorage.setItem('clinic_token', response.accessToken);

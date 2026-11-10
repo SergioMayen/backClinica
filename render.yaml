@@ -41,6 +41,10 @@ services:
         sync: false
       - key: BOOTSTRAP_ADMIN_PASSWORD
         sync: false
+      - key: TURNSTILE_SECRET_KEY
+        sync: false
+      - key: TURNSTILE_EXPECTED_HOSTNAME
+        value: backclinica-web.onrender.com
       - key: FRONTEND_ORIGIN
         value: https://backclinica-web.onrender.com
       - key: JWT_PRIVATE_KEY
@@ -60,6 +64,8 @@ services:
         value: https://backclinica-api.onrender.com/api
       - key: AUTH_URL
         value: https://backclinica-auth.onrender.com/api
+      - key: TURNSTILE_SITE_KEY
+        sync: false
     routes:
       - type: rewrite
         source: /*

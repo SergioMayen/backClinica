@@ -38,12 +38,12 @@ class AuthServiceLoginTest {
 
     @Test void fifthBadPasswordLocksForFifteenMinutesAndCorrectPasswordGetsNoToken() {
         when(passwords.matches("bad", "hashed")).thenReturn(false);
-        for (int i = 0; i < 5; i++) assertStatus(HttpStatus.UNAUTHORIZED, () -> service.login(new LoginRequest("demo", "bad")));
+        for (int i = 0; i < 5; i++) assertStatus(HttpStatus.UNAUTHORIZED, () -> service.login(new LoginRequest("demo", "bad", "valid-test-token")));
         assertEquals(5, account.getFailedLoginAttempts());
         assertEquals(clock.instant().plus(Duration.ofMinutes(15)), account.getLockedUntil());
 
         when(passwords.matches("correct", "hashed")).thenReturn(true);
-        assertStatus(HttpStatus.UNAUTHORIZED, () -> service.login(new LoginRequest("demo", "correct")));
+        assertStatus(HttpStatus.UNAUTHORIZED, () -> service.login(new LoginRequest("demo", "correct", "valid-test-token")));
         verifyNoInteractions(jwtEncoder);
         assertEquals(clock.instant().plus(Duration.ofMinutes(15)), account.getLockedUntil());
     }
@@ -56,9 +56,9 @@ class AuthServiceLoginTest {
         when(jwt.getTokenValue()).thenReturn("test-token");
         when(jwtEncoder.encode(any())).thenReturn(jwt);
 
-        assertStatus(HttpStatus.UNAUTHORIZED, () -> service.login(new LoginRequest("demo", "correct")));
+        assertStatus(HttpStatus.UNAUTHORIZED, () -> service.login(new LoginRequest("demo", "correct", "valid-test-token")));
         clock.advance(Duration.ofMinutes(15));
-        assertEquals("test-token", service.login(new LoginRequest("demo", "correct")).accessToken());
+        assertEquals("test-token", service.login(new LoginRequest("demo", "correct", "valid-test-token")).accessToken());
         assertEquals(0, account.getFailedLoginAttempts());
         assertNull(account.getLockedUntil());
     }

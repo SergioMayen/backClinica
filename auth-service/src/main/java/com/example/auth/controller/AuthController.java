@@ -13,6 +13,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 import com.example.auth.service.LoginRateLimiter;
+import com.example.auth.service.TurnstileVerifier;
 import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
@@ -21,7 +22,8 @@ public class AuthController {
     private final AuthService authService;
     private final RSAPublicKey publicKey;
     private final LoginRateLimiter loginRateLimiter;
-    public AuthController(AuthService authService, RSAPublicKey publicKey, LoginRateLimiter loginRateLimiter) { this.authService = authService; this.publicKey = publicKey; this.loginRateLimiter = loginRateLimiter; }
+    private final TurnstileVerifier turnstileVerifier;
+    public AuthController(AuthService authService, RSAPublicKey publicKey, LoginRateLimiter loginRateLimiter, TurnstileVerifier turnstileVerifier) { this.authService = authService; this.publicKey = publicKey; this.loginRateLimiter = loginRateLimiter; this.turnstileVerifier = turnstileVerifier; }
 
     @PostMapping("/register") @ResponseStatus(HttpStatus.CREATED)
     public TokenResponse register(@Valid @RequestBody RegisterRequest request) { return authService.register(request); }
@@ -29,6 +31,7 @@ public class AuthController {
     @PostMapping("/login")
     public TokenResponse login(@Valid @RequestBody LoginRequest request, HttpServletRequest servletRequest) {
         loginRateLimiter.check(servletRequest.getRemoteAddr(), request.username());
+        turnstileVerifier.verify(request.turnstileToken(), servletRequest.getRemoteAddr());
         return authService.login(request);
     }
 

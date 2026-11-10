@@ -56,8 +56,12 @@ Obtener otro token:
 ```sh
 curl -i http://localhost:8081/api/auth/login \
   -H 'Content-Type: application/json' \
-  -d '{"username":"demo","password":"ClaveSegura123"}'
+  -d '{"username":"demo","password":"ClaveSegura123","turnstileToken":"<token-obtenido-del-widget>"}'
 ```
+
+El endpoint `/api/auth/login` exige `turnstileToken` y lo valida contra Cloudflare Turnstile antes de verificar la contraseña. En local también debes usar un widget configurado para el hostname de desarrollo, su site key en el build y la secret key en el backend. Nunca sustituyas el valor por una clave secreta en el navegador o en este ejemplo. La clave de Turnstile es de un solo uso y expira; para una demostración, resuelve el widget en el formulario de login.
+
+El rate limit de login admite 10 solicitudes por minuto por cliente y cuenta y devuelve `429` si se supera. Las respuestas del límite o de Turnstile no llegan al verificador de contraseña y no aumentan los cinco fallos consecutivos guardados por cuenta. Al quinto fallo se guarda un bloqueo de 15 minutos; el bloqueo rechaza la contraseña correcta y no se prolonga con nuevos intentos.
 
 Con el `accessToken` de la respuesta, llamar un endpoint clínico protegido:
 
