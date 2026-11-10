@@ -28,7 +28,7 @@ public class AuthController {
 
     @PostMapping("/login")
     public TokenResponse login(@Valid @RequestBody LoginRequest request, HttpServletRequest servletRequest) {
-        loginRateLimiter.check(servletRequest.getRemoteAddr());
+        loginRateLimiter.check(servletRequest.getRemoteAddr(), request.username());
         return authService.login(request);
     }
 

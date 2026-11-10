@@ -20,6 +20,15 @@ class LoginRateLimiterTest {
         assertDoesNotThrow(() -> limiter.check("demo-client"));
     }
 
+    @Test void accountLimitStillAppliesWhenProxyAddressChanges() {
+        MutableClock clock = new MutableClock();
+        LoginRateLimiter limiter = new LoginRateLimiter(clock);
+        for (int i = 0; i < 10; i++) limiter.check("proxy-" + i, "demo-user");
+        ResponseStatusException error = assertThrows(ResponseStatusException.class,
+                () -> limiter.check("proxy-11", "demo-user"));
+        assertEquals(HttpStatus.TOO_MANY_REQUESTS, error.getStatusCode());
+    }
+
     private static final class MutableClock extends Clock {
         private Instant instant = Instant.parse("2026-01-01T00:00:00Z");
         void advance(Duration duration) { instant = instant.plus(duration); }

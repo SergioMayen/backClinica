@@ -3,6 +3,9 @@ package com.example.auth.service;
 import java.time.Clock;
 import java.time.Duration;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 import java.util.HashMap;
 import java.util.Map;
 import org.springframework.http.HttpStatus;
@@ -20,10 +23,19 @@ public class LoginRateLimiter {
     public LoginRateLimiter(Clock clock) { this.clock = clock; }
 
     public synchronized void check(String client) {
+        check(client, null);
+    }
+
+    public synchronized void check(String client, String username) {
         long now = clock.millis();
-        ArrayDeque<Long> times = requests.computeIfAbsent(client, ignored -> new ArrayDeque<>());
-        while (!times.isEmpty() && now - times.peekFirst() >= WINDOW_MILLIS) times.removeFirst();
-        if (times.size() >= LIMIT) throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS, "Intenta de nuevo más tarde");
-        times.addLast(now);
+        List<String> keys = new ArrayList<>();
+        if (client != null && !client.isBlank()) keys.add("client:" + client);
+        if (username != null && !username.isBlank()) keys.add("account:" + username.trim().toLowerCase(Locale.ROOT));
+        for (String key : keys) {
+            ArrayDeque<Long> times = requests.computeIfAbsent(key, ignored -> new ArrayDeque<>());
+            while (!times.isEmpty() && now - times.peekFirst() >= WINDOW_MILLIS) times.removeFirst();
+            if (times.size() >= LIMIT) throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS, "Intenta de nuevo más tarde");
+        }
+        for (String key : keys) requests.get(key).addLast(now);
     }
 }
