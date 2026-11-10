@@ -29,7 +29,7 @@ services:
     branch: despliegue-seguridad
     dockerfilePath: ./Dockerfile
     dockerContext: .
-    healthCheckPath: /healthz
+    healthCheckPath: /api/auth/healthz
     envVars:
       - key: AUTH_DB_URL
         sync: false
