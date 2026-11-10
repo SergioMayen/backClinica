@@ -1,6 +1,8 @@
 package com.example.backDocker.model;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 import lombok.Getter;
 import lombok.Setter;
 import java.time.*;
@@ -26,8 +28,10 @@ public class Tratamiento {
     private String usuarioCreacion = "SYSTEM";
     @Column(name="usuario_modificacion", length=100)
     private String usuarioModificacion;
-    @Column(name="fecha_creacion", insertable=false, updatable=false)
+    @CreationTimestamp
+    @Column(name="fecha_creacion", nullable=false)
     private LocalDateTime fechaCreacion;
-    @Column(name="fecha_modificacion", insertable=false, updatable=false)
+    @UpdateTimestamp
+    @Column(name="fecha_modificacion")
     private LocalDateTime fechaModificacion;
 }

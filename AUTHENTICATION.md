@@ -9,7 +9,7 @@ El servicio de autenticación emite JWT `RS256`. La llave privada se queda en el
 
 ## Preparación
 
-Requisitos: Java 21, Maven (o wrapper del proyecto clínico), SQL Server o Azure SQL Database, y OpenSSL. Crear ambas bases (`clinica` y `auth_db`) en el servidor SQL. Desde `auth-service/` generar el par:
+Requisitos: Java 21, Maven (o wrapper del proyecto clínico), PostgreSQL y OpenSSL. Crear las bases `clinica` y `auth_db` en PostgreSQL. En producción se pueden alojar en el mismo proyecto Neon con una credencial del proyecto, pero cada servicio usa su propia base. Desde `auth-service/` generar el par:
 
 ```sh
 ./scripts/generate-keys.sh
@@ -22,8 +22,8 @@ Usar el mismo par en el servicio auth y proveer `auth-service/keys/public.pem` a
 En una terminal desde `auth-service/`:
 
 ```sh
-AUTH_DB_URL='jdbc:sqlserver://localhost:1433;databaseName=auth_db;encrypt=true;trustServerCertificate=true' \
-AUTH_DB_USERNAME='tu-usuario' AUTH_DB_PASSWORD='tu-clave' \
+AUTH_DB_URL='jdbc:postgresql://localhost:5432/auth_db' \
+AUTH_DB_USERNAME='postgres' AUTH_DB_PASSWORD='valor-local-ficticio' \
 JWT_PRIVATE_KEY=file:./keys/private.pem JWT_PUBLIC_KEY=file:./keys/public.pem \
 mvn spring-boot:run
 ```
@@ -31,15 +31,15 @@ mvn spring-boot:run
 En otra terminal, desde la raíz:
 
 ```sh
-DB_URL='jdbc:sqlserver://localhost:1433;databaseName=clinica;encrypt=true;trustServerCertificate=true' \
-DB_USERNAME='tu-usuario' DB_PASSWORD='tu-clave' \
+DB_URL='jdbc:postgresql://localhost:5432/clinica' \
+DB_USERNAME='postgres' DB_PASSWORD='valor-local-ficticio' \
 JWT_PUBLIC_KEY_LOCATION=file:./auth-service/keys/public.pem \
 ./mvnw spring-boot:run
 ```
 
 `JWT_PUBLIC_KEY_LOCATION` debe apuntar a un archivo PEM `BEGIN PUBLIC KEY`. En Docker, montar las llaves como secretos de solo lectura y establecer la ubicación `file:/...` dentro del contenedor. No hay credenciales predeterminadas.
 
-El ejemplo local acepta un certificado autofirmado para desarrollo. En Azure usa `encrypt=true;trustServerCertificate=false` y el nombre DNS completo `*.database.windows.net` para validar el certificado TLS.
+Para Neon, usa el host pooler que muestra la consola y `sslmode=require` en cada JDBC URL. Guarda las URLs y contraseñas reales únicamente en los secretos del proveedor de despliegue.
 
 ## Pruebas manuales
 
