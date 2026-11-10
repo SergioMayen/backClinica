@@ -21,6 +21,7 @@ public class AppUser {
     public Long getId() { return id; }
     public String getUsername() { return username; }
     public String getPassword() { return password; }
+    public void updatePassword(String password) { this.password = password; }
     public int getFailedLoginAttempts() { return failedLoginAttempts; }
     public Instant getLockedUntil() { return lockedUntil; }
     public void recordFailedLogin() { failedLoginAttempts++; }
