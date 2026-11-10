@@ -31,3 +31,25 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Local secrets and credentials ###
+.env
+.env.*
+*.env
+.envrc
+**/keys/
+**/.npmrc
+**/.netrc
+**/.aws/credentials
+**/.docker/config.json
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+*.p8
+credentials*.json
+
+### OS files ###
+.DS_Store

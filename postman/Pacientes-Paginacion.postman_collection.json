@@ -1,0 +1,38 @@
+{
+  "info": {
+    "_postman_id": "55d6d3cf-65b4-44aa-9f19-53c2dbab84dc",
+    "name": "Pacientes - filtros y paginación backend",
+    "description": "Demostración de paginación server-side, orden id DESC, metadata y filtros combinados. Requiere un JWT válido del servicio auth.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" },
+    { "key": "token", "value": "PEGA_AQUI_EL_ACCESS_TOKEN" }
+  ],
+  "item": [
+    {
+      "name": "Página 0 · 50 registros",
+      "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/api/pacientes?page=0&size=50" },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Responde 200 con data y metadata', () => { pm.response.to.have.status(200); const r = pm.response.json(); pm.expect(r.data).to.be.an('array'); pm.expect(r.metadata).to.include.all.keys('totalRecords','page','pageSize','totalPages','hasPreviousPage','hasNextPage'); });", "const r = pm.response.json(); pm.test('Página 0 respeta tamaño y metadata', () => { pm.expect(r.data.length).to.be.at.most(50); pm.expect(r.metadata.page).to.eql(0); pm.expect(r.metadata.pageSize).to.eql(50); pm.expect(r.metadata.hasPreviousPage).to.eql(false); pm.expect(r.metadata.hasNextPage).to.eql(r.metadata.totalPages > 1); });", "pm.collectionVariables.set('page0PatientIds', pm.response.json().data.map(p => String(p.id)).join(','));"] } }]
+    },
+    {
+      "name": "Página 1 · 50 registros",
+      "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/api/pacientes?page=1&size=50" },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["const r = pm.response.json();", "pm.test('Página 1 respeta tamaño y metadata', () => { pm.response.to.have.status(200); pm.expect(r.data.length).to.be.at.most(50); pm.expect(r.metadata.page).to.eql(1); pm.expect(r.metadata.pageSize).to.eql(50); pm.expect(r.metadata.hasPreviousPage).to.eql(true); pm.expect(r.metadata.hasNextPage).to.eql(r.metadata.page + 1 < r.metadata.totalPages); });", "const prior = (pm.collectionVariables.get('page0PatientIds') || '').split(',').filter(Boolean); const ids = r.data.map(p => String(p.id)); pm.test('Página 1 no repite pacientes de página 0', () => pm.expect(ids.filter(id => prior.includes(id))).to.be.empty); pm.collectionVariables.set('page1PatientIds', ids.join(','));"] } }]
+    },
+    {
+      "name": "Página 2 · 50 registros",
+      "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/api/pacientes?page=2&size=50" },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["const r = pm.response.json();", "pm.test('Página 2 respeta tamaño y metadata', () => { pm.response.to.have.status(200); pm.expect(r.data.length).to.be.at.most(50); pm.expect(r.metadata.page).to.eql(2); pm.expect(r.metadata.pageSize).to.eql(50); pm.expect(r.metadata.hasPreviousPage).to.eql(true); pm.expect(r.metadata.hasNextPage).to.eql(r.metadata.page + 1 < r.metadata.totalPages); });", "const prior = [...(pm.collectionVariables.get('page0PatientIds') || '').split(','), ...(pm.collectionVariables.get('page1PatientIds') || '').split(',')].filter(Boolean); const ids = r.data.map(p => String(p.id)); pm.test('Página 2 no repite pacientes de páginas anteriores', () => pm.expect(ids.filter(id => prior.includes(id))).to.be.empty);"] } }]
+    },
+    {
+      "name": "Filtros combinados · María activa · página 0",
+      "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/api/pacientes?nombre=Maria&activo=true&page=0&size=50" },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["const r = pm.response.json();", "pm.test('Filtros combinados conservan paginación y metadata', () => { pm.response.to.have.status(200); pm.expect(r.data.length).to.be.at.most(50); pm.expect(r.metadata.page).to.eql(0); pm.expect(r.metadata.pageSize).to.eql(50); });", "pm.test('Cada paciente cumple nombre y estado', () => r.data.forEach(p => { pm.expect((p.nombre || '').toLowerCase()).to.include('maria'); pm.expect(p.activo).to.eql(true); }));"] } }]
+    }
+  ]
+}

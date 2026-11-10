@@ -20,6 +20,30 @@ Cada módulo implementa los cinco endpoints listados en la tabla:
 
 `POST` responde `201 Created`; `DELETE` responde `204 No Content`. Los endpoints reciben y devuelven DTOs. Para relaciones, se envía el identificador como campo terminado en `Id`. Ejemplo para crear un doctor:
 
+## Búsqueda y paginación de pacientes
+
+`GET /api/pacientes` (también disponible como `GET /api/paciente`) admite los criterios opcionales nombre, apellido, DPI y activo, así como página y tamaño:
+
+```http
+GET /api/pacientes?nombre=Maria&activo=true&page=0&size=50
+GET /api/pacientes?apellido=Lopez&page=1&size=100
+```
+
+`page` empieza en 0 y `size` solo admite 50, 100 o 200 (predeterminados 0 y 50). El orden es `id DESC`. Los criterios de texto buscan coincidencias parciales sin distinguir mayúsculas y se combinan con AND. Una página negativa o tamaño no permitido responde 400.
+
+La respuesta tiene la forma `{"data":[...],"metadata":{"totalRecords":0,"page":0,"pageSize":50,"totalPages":0,"hasPreviousPage":false,"hasNextPage":false}}`. `data` contiene solo los pacientes de esa página; el total y las banderas de metadata corresponden a los filtros enviados.
+
+Peticiones para demostrar paginación y filtros combinados:
+
+```text
+/api/pacientes?page=0&size=50
+/api/pacientes?page=1&size=50
+/api/pacientes?page=2&size=50
+/api/pacientes?nombre=Maria&activo=true&page=0&size=50
+```
+
+Importa `postman/Pacientes-Paginacion.postman_collection.json`, define `token` con `accessToken` de auth-service y ejecuta las cuatro solicitudes en orden. Usa DevTools → Network para capturar las mismas peticiones generadas por la pantalla Angular.
+
 ```json
 {
   "nombre": "Ana",
